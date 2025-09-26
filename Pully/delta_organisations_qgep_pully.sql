@@ -278,8 +278,9 @@ SET fk_provider = '3'
 where fk_provider IS NULL;
 
 UPDATE qgep_od.wastewater_structure
-set location_name = identifier
-WHERE length(wastewater_structure.identifier)>20;
+SET location_name = LEFT(location_name, 20)
+WHERE location_name IS NOT NULL AND LENGTH(location_name) > 20;
+
 
 -- Create new organisations from VSA (if you want to match it before migration)
 INSERT INTO qgep_od.organisation (obj_id, identifier)
