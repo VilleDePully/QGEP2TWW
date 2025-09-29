@@ -278,6 +278,10 @@ SET fk_provider = '3'
 where fk_provider IS NULL;
 
 UPDATE qgep_od.wastewater_structure
+SET identifier = obj_id
+WHERE identifier IS NOT NULL AND LENGTH(identifier) > 20;
+
+UPDATE qgep_od.wastewater_structure
 SET location_name = LEFT(location_name, 20)
 WHERE location_name IS NOT NULL AND LENGTH(location_name) > 20;
 
