@@ -277,10 +277,27 @@ UPDATE qgep_od.wastewater_structure
 SET fk_provider = '3'
 where fk_provider IS NULL;
 
+-- Update wastewater_structure identifier if too long
 UPDATE qgep_od.wastewater_structure
 SET identifier = obj_id
 WHERE identifier IS NOT NULL AND LENGTH(identifier) > 20;
 
+-- Update wastewater_networkelement identifier if too long (Pipes, network nodes, ...)
+UPDATE qgep_od.wastewater_networkelement
+SET identifier = fk_wastewater_structure
+WHERE identifier IS NOT NULL AND LENGTH(identifier) > 20 AND fk_wastewater_structure IS NOT NULL;
+
+-- Update structure_part identifier if too long (Covers, ...)
+UPDATE qgep_od.structure_part
+SET identifier = fk_wastewater_structure
+WHERE identifier IS NOT NULL AND LENGTH(identifier) > 20 AND fk_wastewater_structure IS NOT NULL;
+
+-- Update reach_point identifier if too long (Inlets, Outlets, ...)
+UPDATE qgep_od.reach_point
+SET identifier = fk_wastewater_networkelement
+WHERE identifier IS NOT NULL AND LENGTH(identifier) > 20 AND fk_wastewater_networkelement IS NOT NULL;
+
+-- Update wastewater_structure location_name if too long
 UPDATE qgep_od.wastewater_structure
 SET location_name = LEFT(location_name, 20)
 WHERE location_name IS NOT NULL AND LENGTH(location_name) > 20;
@@ -380,3 +397,74 @@ ch176dc9WS010810
 ch176dc9WS010811
 ch176dc9WS011383
 ch176dc9WS007085
+
+-- Handle Mutliple geometries
+
+-- 1. Find all real multiple geometries
+
+SELECT 
+  obj_id,
+  dump.path AS index_geom,
+  ST_FORCECURVE(dump.geom)::geometry(CURVEPOLYGONZ, 2056) AS simple_geom
+FROM 
+  qgep_od.wastewater_structure ws,
+  LATERAL ST_Dump(ws.detail_geometry_geometry) AS dump
+WHERE
+  dump.geom IS NOT NULL
+  AND dump.path[1] > 1
+;
+
+
+-- List of obj_id with multiple geometries
+('ch176dc9WN022275',
+'ch176dc9WN022275',
+'ch176dc9WN021365',
+'ch176dc9WN021365',
+'ch176dc9WN022256',
+'ch176dc9WS012473',
+'ch176dc9WS023498',
+'ch176dc9WS023406',
+'ch176dc9WS023735',
+'ch176dc9WS024877',
+'ch176dc9WS024878')
+
+ALTER TABLE qgep_od.wastewater_structure ADD COLUMN detail_geometry_geometry_2 geometry(MULTIPOLYGONZ, 2056);
+
+UPDATE qgep_od.wastewater_structure SET detail_geometry_geometry_2 = detail_geometry_geometry
+WHERE detail_geometry_geometry IS NOT NULL;
+
+UPDATE qgep_od.wastewater_structure SET detail_geometry_geometry = NULL
+WHERE detail_geometry_geometry IS NOT NULL;
+
+-- Execute drop_view.sql
+
+ALTER TABLE qgep_od.wastewater_structure
+ALTER COLUMN detail_geometry_geometry SET DATA TYPE geometry(CURVEPOLYGONZ, 2056);
+
+/* -- SELECTION
+SELECT obj_id,ST_ASTEXT(ST_FORCECURVE(dump.geom)::geometry(CURVEPOLYGONZ, 2056))
+FROM qgep_od.wastewater_structure ws,
+LATERAL ST_Dump(ws.detail_geometry_geometry_2) AS dump
+WHERE dump.geom IS NOT NULL
+AND dump.path[1] = 1;
+*/
+
+UPDATE qgep_od.wastewater_structure ws
+SET detail_geometry_geometry = ST_FORCECURVE(d.geom)::Geometry(CurvePolygonZ,2056)
+FROM (
+	SELECT obj_id, (ST_Dump(ST_CollectionExtract(detail_geometry_geometry_2, 3))).geom
+	FROM qgep_od.wastewater_structure
+	WHERE detail_geometry_geometry_2 IS NOT NULL
+) selection
+WHERE ws.obj_id = selection.obj_id;
+
+-- Regen views (PYTHON CODE TO RUN FROM THE OSGEO4W SHELL)
+-- Check pirogue version 
+pip show pirogue
+
+-- In QGEP/datamodel run
+pip install -r requirements.txt
+
+-- In QGEP/datamodel run / adapt pg_service according to your connection
+python view/create_views.py -p pg_qgep_migration -s 2056
+
