@@ -1,0 +1,8 @@
+/*
+  This script duplicates the QGEP database for migration testing purposes.
+  It creates a new database named 'qgep_migration' based on the existing 'qgep_pully' database.
+  Replace 'qgep_pully' with the name of your source database if different.
+  You can alternatively use TMMT or oQtopus for that purpose.
+*/
+
+CREATE DATABASE qgep_migration FROM TEMPLATE qgep_pully;
