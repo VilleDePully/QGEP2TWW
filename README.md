@@ -12,28 +12,25 @@ These scripts aims to help to get practical into the migration from QGEP to TEKS
 > before trying to migrate and install TWW
 
 The migration approach is as following :
+ * [Upgrading QGEP](https://github.com/teksi/QGEP2TWW/wiki/Upgrading-QGEP)
+   * Create a copy of your production database
+   * Drop all views and custom extensions locking primary tables (qgep_od)
+   * Upgrade QGEP to latest available version for datamodel and plugin
 
- * Create a copy of your production database
- * Drop all views and custom extensions locking primary tables (qgep_od)
- * Upgrade QGEP to latest available version for datamodel and plugin
+ * [Make QGEP Conform VSA 2015 and export ready](https://github.com/teksi/QGEP2TWW/wiki/Making-QGEP-Export-Ready)
+   * If necessary, drop symbology triggers to avoid high computation time when dealing with mass edits
+   * Create QGEP VSA DSS 2015 Export
 
- * Make QGEP Conform VSA 2015 and export ready
- * If necessary, drop symbology triggers to avoid high computation time when dealing with mass edits
- * Create QGEP VSA DSS 2015 Export
+ * [Conversion of the dataset from 2015->2020.1](https://github.com/teksi/QGEP2TWW/wiki/Converting-2015-2020)
+   * Using the VSA converter tool
 
- Conversion of the dataset from 2015->2020.1
+ * [Starting with TWW](https://github.com/teksi/QGEP2TWW/wiki/Starting-With-TWW)
+   * Initialize TWW into latest available version
+   * Import organisation data into TWW
+   * Import network data into TWW
 
- * Using the VSA converter tool
-
- Starting with TWW
-
- * Initialize TWW into latest available version
- * Import organisation data into TWW
- * Import network data into TWW
-
- Migrate Adaptations / additional data
-
- * Upgrade 3D geometries
- * Add additional custom fields and migrate these
- * Create custom export views and schemas
+ * [Migrate Adaptations / additional data](https://github.com/teksi/QGEP2TWW/wiki/Dealing-with-customizations)
+   * Upgrade 3D geometries (not custom)
+   * Add additional custom fields and migrate these
+   * Create custom export views and schemas
 
